@@ -1,16 +1,4 @@
-require("dotenv").config();
-
-const properties = require("./json/properties.json");
-const users = require("./json/users.json");
-
-const { Pool } = require("pg");
-
-const pool = new Pool({
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  host: process.env.DB_HOST,
-  database: process.env.DB_DATABASE
-});
+const db = require("./index");
 
 /// Users
 
@@ -21,7 +9,7 @@ const pool = new Pool({
  */
 
 const getUserWithEmail = function(email) {
-  return pool
+  return db
     .query(
       `
   SELECT *
@@ -41,7 +29,7 @@ exports.getUserWithEmail = getUserWithEmail;
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithId = function(id) {
-  return pool
+  return db
     .query(
       `
   SELECT *
@@ -64,7 +52,7 @@ exports.getUserWithId = getUserWithId;
 const addUser = function(user) {
   const { name, email, password } = user;
   const values = [name, email, password];
-  return pool
+  return db
     .query(
       `
   INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING *
@@ -84,7 +72,7 @@ exports.addUser = addUser;
  * @return {Promise<[{}]>} A promise to the reservations.
  */
 const getAllReservations = function(guest_id, limit = 10) {
-  return pool
+  return db
     .query(
       `SELECT
   properties.*,
@@ -168,9 +156,8 @@ const getAllProperties = function(options, limit = 10) {
   ORDER BY cost_per_night
   LIMIT $${queryParams.length};
   `;
-  console.log(queryString, queryParams);
 
-  return pool.query(queryString, queryParams).then(res => {
+  return db.query(queryString, queryParams).then(res => {
     return res.rows;
   });
 };
@@ -218,7 +205,7 @@ const addProperty = function(property) {
     post_code
   ];
 
-  return pool
+  return db
     .query(
       `
   INSERT INTO properties (owner_id, title, description, thumbnail_photo_url, 
